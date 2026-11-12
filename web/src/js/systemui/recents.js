@@ -1,7 +1,7 @@
 // RecentsActivity (Lollipop "Overview"): a stack of task cards with live snapshots.
 import { h, vector, drag } from '../core/dom.js';
 import { asset } from '../core/assets.js';
-import { sys } from '../core/system.js';
+import { sys, appIconUrl } from '../core/system.js';
 import { STRINGS } from '@gen';
 import { click } from '../core/sound.js';
 
@@ -41,7 +41,7 @@ export function createRecents(screen) {
       const m = t.manifest;
       const card = h('div.rc-card', { style: { width: w + 'px', zIndex: i } },
         h('div.rc-header', { style: { background: m.color || '#607d8b' } },
-          h('img.rc-icon', { src: asset(`icon/${m.icon}.png`) || '' }),
+          h('img.rc-icon', { src: appIconUrl(m) }),
           h('div.rc-title', m.label),
           h('button.rc-dismiss.rip.rip-u', { onclick: e => { e.stopPropagation(); dismiss(card, t, 1); } }, vector('recents_dismiss_light'))),
         snapshot(t, w));

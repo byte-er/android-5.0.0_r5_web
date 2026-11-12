@@ -18,6 +18,7 @@ import { createLauncher, applyWallpaper } from './launcher/launcher.js';
 import { BUILD_PROPS } from '@gen';
 import { startAlarmService } from './apps/clock.js';
 import './apps/index.js';
+import { loadInstalledPackages } from './core/packages.js';
 
 const params = new URLSearchParams(location.search);
 
@@ -61,6 +62,20 @@ async function main() {
   screen.append(windows);
   sys.attach(screen, windows, launcher.root);
   sys.openWallpaperPicker = launcher.openWallpaperPicker;
+  // PackageManager: bring up installed .wapk packages, then refresh the home screen
+  const packagesReady = loadInstalledPackages().catch(e => console.error(e)).then(() => launcher.render());
+
+  // ACTION_INSTALL_PACKAGE from the host: drop a .wapk onto the page
+  const installBytes = (bytes, name) => sys.launch('packageinstaller', { bytes, name });
+  window.addEventListener('dragover', e => { if ([...(e.dataTransfer?.items || [])].some(i => i.kind === 'file')) { e.preventDefault(); document.body.classList.add('drop-target'); } });
+  window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drop-target'); });
+  window.addEventListener('drop', async e => {
+    document.body.classList.remove('drop-target');
+    const f = [...(e.dataTransfer?.files || [])].find(f => /\.(wapk|apk)$/i.test(f.name));
+    if (!f) return;
+    e.preventDefault();
+    installBytes(new Uint8Array(await f.arrayBuffer()), f.name);
+  });
   const recents = createRecents(screen);
   const statusbar = createStatusBar();
   screen.append(statusbar);
@@ -198,6 +213,11 @@ async function main() {
     }
   }
   startAlarmService();
+  // ?install=<url of a .wapk>
+  if (params.get('install')) packagesReady.then(async () => {
+    try { const r = await fetch(params.get('install')); if (!r.ok) throw new Error(r.status); installBytes(new Uint8Array(await r.arrayBuffer()), params.get('install')); }
+    catch (e) { console.error('install failed', e); }
+  });
   boot();
 }
 

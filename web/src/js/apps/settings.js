@@ -1,6 +1,6 @@
 // packages/apps/Settings
 import { h, icon, vector, sleep } from '../core/dom.js';
-import { App, registerApp, installedApps, appManifest, sys } from '../core/system.js';
+import { App, registerApp, installedApps, appManifest, appIconUrl, sys } from '../core/system.js';
 import { prefs } from '../core/prefs.js';
 import { asset } from '../core/assets.js';
 import { db } from '../core/db.js';
@@ -11,6 +11,14 @@ import { patternView } from '../systemui/keyguard.js';
 import { battery } from '../systemui/battery.js';
 import { BUILD_PROPS, STRINGS } from '@gen';
 import { resetLauncherLayout } from '../launcher/launcher.js';
+import { uninstall, permissionLabel } from '../core/packages.js';
+
+// Opens a file chooser for a .wapk and hands it to the PackageInstaller
+export function pickWapk() {
+  const inp = h('input', { type: 'file', accept: '.wapk,.apk' });
+  inp.onchange = async () => { const f = inp.files[0]; if (f) sys.launch('packageinstaller', { bytes: new Uint8Array(await f.arrayBuffer()), name: f.name }); };
+  inp.click();
+}
 
 const S = (k, d) => STRINGS[k] || d;
 const LANG_NAMES = { 'en-US': 'English (United States)', 'en-GB': 'English (United Kingdom)', 'de-DE': 'Deutsch (Deutschland)', 'es-ES': 'Español (España)', 'fr-FR': 'Français (France)', 'it-IT': 'Italiano (Italia)' };
@@ -40,10 +48,14 @@ class Settings extends App {
   onCreate(root, intent) {
     this.stack = new PageStack(root);
     this.devTaps = 0; this.verTaps = 0;
-    this.stack.push(this.dashboard(), false);
-    if (intent.page) this.open(intent.page, intent);
+    this.deepLink(intent);
   }
-  onNewIntent(intent) { if (intent.page) { while (this.stack.pop()); this.open(intent.page, intent); } }
+  onNewIntent(intent) { if (intent.page) this.deepLink(intent); }
+  // An intent for a sub-screen opens just that screen; Back returns to the caller.
+  deepLink(intent) {
+    const f = intent.page && this['p_' + intent.page];
+    this.stack.reset(f ? f.call(this, intent) : this.dashboard());
+  }
   onBack() { stopSpeaking(); return this.stack.pop(); }
 
   page(title, ...children) {
@@ -229,20 +241,35 @@ class Settings extends App {
       switchItem({ title: 'Battery saver', checked: prefs.get('battery_saver'), onChange: v => { prefs.set('battery_saver', v); prefs.set('anim_scale', v ? 0 : 1); } }));
   }
   p_apps() {
-    const list = installedApps().sort((a, b) => a.label.localeCompare(b.label)).map(m =>
-      listItem({ avatar: h('img.li-appicon', { src: asset(`icon/${m.icon}.png`) || '' }), title: m.label, summary: sys.findTask(m.id) ? 'Running' : null, onClick: () => this.open('app', { app: m.id }) }));
-    return this.page(S('applications_settings', 'Apps'), ...list);
+    const content = h('div');
+    const render = () => {
+      content.innerHTML = '';
+      content.append(...installedApps().sort((a, b) => a.label.localeCompare(b.label)).map(m =>
+        listItem({ avatar: h('img.li-appicon', { src: appIconUrl(m) }), title: m.label, summary: [m.wapk ? 'Installed (.wapk) \u00b7 ' + m.version : null, sys.findTask(m.id) ? 'Running' : null].filter(Boolean).join(' \u00b7 ') || null, onClick: () => this.open('app', { app: m.id }) })));
+    };
+    render();
+    const offs = [sys.on('package-added', render), sys.on('package-removed', render)];
+    const pg = h('div', null, toolbar({ title: S('applications_settings', 'Apps'), back: () => this.stack.pop(), menu: [{ label: 'Install app from file (.wapk)\u2026', onClick: () => pickWapk() }] }),
+      h('div.page-content.settings-list', null, content));
+    pg.onHide = () => offs.forEach(f => f());
+    return pg;
   }
   p_app({ app }) {
     const m = appManifest(app);
     if (!m) return this.page('App info');
     const stores = m.stores || [];
+    const perms = m.permissions && m.permissions.length ? m.permissions : null;
     return this.page('App info',
-      h('div.app-info-head', h('img', { src: asset(`icon/${m.icon}.png`) || '' }), h('div', h('div.li-title', m.label), h('div.li-summary', 'version ' + BUILD_PROPS['ro.build.version.release'] + '-' + BUILD_PROPS['ro.build.id']))),
-      h('div.btn-row', button('FORCE STOP', () => { const t = sys.findTask(app); if (t) { sys.destroy(t); toast(`${m.label} stopped`); } else toast('Not running'); }, 'raised'),
-        button('CLEAR DATA', async () => { for (const s of stores) await db.clear(s); toast(stores.length ? 'Data cleared' : 'No data'); }, 'raised')),
+      h('div.app-info-head', h('img', { src: appIconUrl(m) }), h('div', h('div.li-title', m.label), h('div.li-summary', 'version ' + (m.wapk ? m.version : BUILD_PROPS['ro.build.version.release'] + '-' + BUILD_PROPS['ro.build.id'])))),
+      h('div.btn-row',
+        m.wapk ? button('UNINSTALL', () => dialog({ title: m.label, message: 'Do you want to uninstall this app?', buttons: [{ label: 'Cancel' }, { label: 'OK', onClick: async () => { await uninstall(app); toast('Uninstall finished.'); this.stack.pop(); } }] }), 'raised')
+          : button('FORCE STOP', () => { const t = sys.findTask(app); if (t) { sys.destroy(t); toast(`${m.label} stopped`); } else toast('Not running'); }, 'raised'),
+        m.wapk ? button('FORCE STOP', () => { const t = sys.findTask(app); if (t) { sys.destroy(t); toast(`${m.label} stopped`); } else toast('Not running'); }, 'raised')
+          : button('CLEAR DATA', async () => { for (const s of stores) await db.clear(s); toast(stores.length ? 'Data cleared' : 'No data'); }, 'raised')),
       listItem({ title: 'Package', summary: m.pkg || 'com.android.' + app }),
-      listItem({ title: 'Permissions', summary: (m.permissions || ['No permissions']).join(', ') }));
+      m.wapk ? listItem({ title: 'Source', summary: 'Installed from a .wapk package' }) : null,
+      subheader('Permissions'),
+      ...(perms ? perms.map(p => listItem({ title: permissionLabel(p), summary: p })) : [listItem({ title: 'This app requires no special permissions.' })]));
   }
 
   // ---------- Personal
@@ -267,7 +294,7 @@ class Settings extends App {
       listItem({ title: 'Owner info', summary: prefs.get('user_name'), onClick: () => prompt({ title: 'Owner info', value: prefs.get('user_name'), onOk: v => prefs.set('user_name', v || 'Owner') }) }),
       listItem({ title: 'Smart Lock', summary: 'Not available' }), subheader('Passwords'),
       switchItem({ title: 'Make passwords visible', checked: true, onChange: () => {} }),
-      subheader('Device administration'), listItem({ title: 'Unknown sources', summary: 'Install apps from unknown sources' }),
+      subheader('Device administration'), switchItem({ title: 'Unknown sources', summary: 'Allow installation of apps from unknown sources', checked: prefs.get('unknown_sources'), onChange: v => prefs.set('unknown_sources', v) }),
       subheader('Advanced'), listItem({ title: 'Screen pinning', summary: 'Off' }));
   }
   setupPin(done) {

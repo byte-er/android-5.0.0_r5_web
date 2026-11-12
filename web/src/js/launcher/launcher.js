@@ -3,7 +3,7 @@
 import { h, icon, vector, clamp, drag, onLongPress, fmtTime, fmtDate } from '../core/dom.js';
 import { asset, listAssets } from '../core/assets.js';
 import { prefs } from '../core/prefs.js';
-import { sys, installedApps, appManifest } from '../core/system.js';
+import { sys, installedApps, appManifest, appIconUrl } from '../core/system.js';
 import { click, vibrate } from '../core/sound.js';
 import { toast, dialog, button } from '../core/ui.js';
 
@@ -28,7 +28,7 @@ function appIcon(id, { label = true, onClick } = {}) {
   const m = appManifest(id);
   if (!m) return null;
   const el = h('div.app-icon.rip', { 'data-app': id, title: m.label },
-    h('img', { src: asset(`icon/${m.icon}.png`) || '', alt: '', draggable: false }),
+    h('img', { src: appIconUrl(m), alt: '', draggable: false }),
     label ? h('div.app-label', m.label) : null);
   el.addEventListener('click', e => {
     if (el.dataset.dragging) return;
@@ -73,7 +73,7 @@ export function createLauncher(screen, wallpaperEl) {
   let layout = loadLayout();
   let page = 0;
   const search = h('div.qsb.rip', { onclick: () => { click(); sys.launch('browser', { focusUrl: true }); } }, icon('search'), h('span', 'Search'), icon('mic'));
-  const dropBar = h('div.drop-bar', null, h('div.drop-target.remove', icon('close'), 'Remove'), h('div.drop-target.info', icon('info'), 'App info'));
+  const dropBar = h('div.drop-bar', null, h('div.drop-target.remove', icon('close'), 'Remove'), h('div.drop-target.uninstall', icon('delete'), 'Uninstall'), h('div.drop-target.info', icon('info'), 'App info'));
   const pagesEl = h('div.ws-pages');
   const indicator = h('div.page-indicator');
   const hotseat = h('div.hotseat');
@@ -160,6 +160,7 @@ export function createLauncher(screen, wallpaperEl) {
   const occupied = (p, x, y, w = 1, hh = 1, except) => layout.pages[p].some(it => it !== except &&
     x < it.x + (it.w || 1) && x + w > it.x && y < it.y + (it.h || 1) && y + hh > it.y);
   function startDrag(el, item, pageIdx, ev) {
+    dropBar.querySelector('.uninstall').hidden = !(item.app && (appManifest(item.app) || {}).wapk);
     vibrate(30);
     const s = screen.getBoundingClientRect(), k = s.width / screen.offsetWidth;
     const r = el.getBoundingClientRect();
@@ -201,6 +202,7 @@ export function createLauncher(screen, wallpaperEl) {
       };
       if (target && target.classList.contains('remove')) remove();
       else if (target && target.classList.contains('info')) { if (item.app) sys.launch('settings', { page: 'app', app: item.app }); }
+      else if (target && target.classList.contains('uninstall')) { if (item.app) sys.launch('settings', { page: 'app', app: item.app }); }
       else if (e) {
         const hr = hotseat.getBoundingClientRect();
         if (item.app && e.clientY > hr.top) {
@@ -325,6 +327,17 @@ export function createLauncher(screen, wallpaperEl) {
 
   sys.on('home-pressed-on-home', () => { if (unbackAll) closeAllApps(); else if (unbackOv) exitOverview(); else setPage(0); });
   sys.on('home', () => { closeAllApps(true); exitOverview(); });
+  // PackageManager broadcasts (ACTION_PACKAGE_ADDED / ACTION_PACKAGE_REMOVED)
+  sys.on('package-added', (pkg, fresh) => {
+    const present = layout.hotseat.includes(pkg) || layout.pages.some(pg => pg.some(it => it.app === pkg));
+    if (fresh && !present) { placeOnPage(pkg, 0); saveLayout(layout); }
+    render();
+  });
+  sys.on('package-removed', pkg => {
+    layout.hotseat = layout.hotseat.map(a => a === pkg ? null : a);
+    layout.pages = layout.pages.map(pg => pg.filter(it => it.app !== pkg));
+    saveLayout(layout); render();
+  });
   window.addEventListener('resize', () => setPage(page, false));
   render();
   return { root, render, openWallpaperPicker, reset: () => { resetLauncherLayout(); layout = loadLayout(); page = 0; render(); } };

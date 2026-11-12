@@ -1,11 +1,15 @@
 // ActivityManagerService + WindowManagerService, reduced to what a browser needs.
 import { h, sleep } from './dom.js';
 import { prefs } from './prefs.js';
+import { asset } from './assets.js';
 
 const registry = new Map();
 export function registerApp(manifest, factory) { registry.set(manifest.id, { manifest, factory }); }
+export function unregisterApp(id) { registry.delete(id); }
 export const installedApps = () => [...registry.values()].map(r => r.manifest).filter(m => !m.hidden);
 export const appManifest = id => registry.get(id)?.manifest;
+// Launcher icon: bundled system apps use AOSP icons from the build, WAPKs carry their own
+export const appIconUrl = m => (m && (m.iconUrl || asset(`icon/${m.icon}.png`))) || '';
 
 class Emitter {
   constructor() { this._l = {}; }

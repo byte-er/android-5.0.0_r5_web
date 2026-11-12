@@ -42,8 +42,38 @@ Contacts (vCard import/export), Phone (DTMF tones; simulated calls answered by
 Pico TTS), Messaging (with a reply bot), Music (Media Session API), Sound
 Recorder, Calendar.
 
+### Installing apps: WAPK packages
+The port has a PackageInstaller for **`.wapk`** packages ([format and runtime
+API](docs/WAPK.md)). To install one:
+- drop the file onto the page;
+- use Settings › Apps › ⋮ › *Install app from file*;
+- open it in the file explorer;
+- or load the page with `?install=<url>`.
+
+Installation requires Settings › Security › *Unknown sources*, just like on a
+device. Installed apps appear on the home screen, in all apps and in
+Settings › Apps (App info shows their permissions and has an Uninstall button),
+and persist in IndexedDB.
+
+`tools/apk2wapk.mjs` converts an APK: metadata, label and icon come from the
+APK's `AndroidManifest.xml` and `resources.arsc`. The Dalvik bytecode can't run
+in a browser, so behaviour comes from a web implementation directory. Example:
+
+```bash
+node tools/apk2wapk.mjs cx-file-explorer-2-7-6.apk --impl wapk/com.cxinventor.file.explorer \
+  -o ../releases/wapk/com.cxinventor.file.explorer-2.7.6.wapk
+```
+
+`wapk/com.cxinventor.file.explorer/` is a web file explorer written for that
+package. It provides:
+- `/sdcard` on the Origin Private File System;
+- a read-only `/system` built from the AOSP files in the build;
+- local folders through the File System Access API;
+- a library view by file type, copy/move/rename/delete, zip and unzip;
+- image, media and text viewers, and installing `.wapk` files from storage.
+
 ### Web platform features used
-ES modules bundled with esbuild, WebAssembly, Web Audio, Web Animations,
+ES modules bundled with esbuild (plus dynamic `import()` of WAPK entry modules), WebAssembly, Origin Private File System, File System Access API, Compression Streams (ZIP), SubtleCrypto (package checksums), Web Audio, Web Animations,
 CSS custom properties, `clip-path` reveals, `color-mix()`, Pointer Events,
 IndexedDB, Service Worker + Web App Manifest (offline/installable), Battery
 Status, Network Information, Media Capture, MediaRecorder, Media Session,
@@ -76,10 +106,13 @@ URL flags: `?noboot` skips the boot animation, `?unlock` skips the lock screen,
 ```
 web/
   native/        libc shim, Pico + EAS front-ends/host layers, build.sh
-  tools/         build.mjs (asset extraction, bundling, releases), vector2svg.mjs
+  tools/         build.mjs (asset extraction, bundling, releases), vector2svg.mjs, apk2wapk.mjs
+  docs/WAPK.md   WAPK package format + runtime API
+  wapk/          web implementations used when converting APKs
   src/index.html, src/sw.js
   src/css/       base widgets, SystemUI, Launcher, apps
-  src/js/core/   system (AMS/WMS), ui widgets, prefs, db, sound, tts, midi, notifications
+  src/js/core/   system (AMS/WMS), ui widgets, prefs, db, sound, tts, midi, notifications,
+                 packages (PackageManager + WAPK runtime), storage, zip, apk (AXML/ARSC parsers)
   src/js/systemui/  bootanim, statusbar, battery, navbar, shade, keyguard, recents, volume, power
   src/js/launcher/  Launcher3
   src/js/apps/   one module per app

@@ -1,11 +1,11 @@
 // Tiny IndexedDB wrapper: a ContentProvider-like store per collection.
 const DB = 'android5web';
-const STORES = ['media', 'contacts', 'calls', 'messages', 'events', 'alarms', 'recordings', 'kv'];
+const STORES = ['media', 'contacts', 'calls', 'messages', 'events', 'alarms', 'recordings', 'kv', 'packages', 'files'];
 let dbp;
 function open() {
   if (dbp) return dbp;
   dbp = new Promise((res, rej) => {
-    const rq = indexedDB.open(DB, 2);
+    const rq = indexedDB.open(DB, 3);
     rq.onupgradeneeded = () => { for (const s of STORES) if (!rq.result.objectStoreNames.contains(s)) rq.result.createObjectStore(s, { keyPath: 'id', autoIncrement: true }); };
     rq.onsuccess = () => res(rq.result);
     rq.onerror = () => rej(rq.error);

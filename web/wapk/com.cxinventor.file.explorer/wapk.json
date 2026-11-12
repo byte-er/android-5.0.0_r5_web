@@ -1,0 +1,11 @@
+{
+  "theme": { "colorPrimary": "#1e88e5", "colorPrimaryDark": "#1565c0", "colorAccent": "#ff6d00" },
+  "permissions": [
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.REQUEST_INSTALL_PACKAGES",
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.VIBRATE"
+  ]
+}

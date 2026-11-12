@@ -20,6 +20,7 @@ const DEFAULTS = {
   dev_enabled: false, show_bounds: false, show_touches: false, anim_scale: 1,
   keyboard: 'auto',
   egg_mode: 0,
+  unknown_sources: false,
   user_name: 'Owner',
 };
 let state = { ...DEFAULTS };

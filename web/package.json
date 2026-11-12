@@ -7,7 +7,8 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "build:native": "sh native/build.sh",
-    "serve": "node tools/serve.mjs"
+    "serve": "node tools/serve.mjs",
+    "apk2wapk": "node tools/apk2wapk.mjs"
   },
   "devDependencies": {
     "esbuild": "0.24.0"

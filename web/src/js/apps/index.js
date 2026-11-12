@@ -12,3 +12,4 @@ import './calendar.js';
 import './music.js';
 import './recorder.js';
 import './egg.js';
+import './packageinstaller.js';

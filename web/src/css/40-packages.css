@@ -1,0 +1,23 @@
+/* PackageInstaller + WAPK support */
+.package-installer { position: absolute; inset: 0; display: flex; flex-direction: column; background: #fafafa; color: rgba(0,0,0,.87); }
+.pi-header { display: flex; align-items: center; gap: 16px; padding: 16px 16px 16px 20px; background: var(--primary); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.25); flex: none; }
+.pi-icon { width: 48px; height: 48px; object-fit: contain; }
+.pi-label { font-size: 20px; font-weight: 500; }
+.pi-scroll { flex: 1; overflow-y: auto; touch-action: pan-y; padding: 16px 0; }
+.pi-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+.pi-question { padding: 0 20px 12px; font-size: 16px; line-height: 1.4; }
+.pi-scroll .tabs { margin-bottom: 8px; --accent-tab: #fff; }
+.pi-perm { display: flex; align-items: flex-start; gap: 16px; padding: 10px 20px; }
+.pi-perm .mdi { color: var(--accent); }
+.pi-perm-title { font-size: 15px; }
+.pi-perm-name { font-size: 12px; color: rgba(0,0,0,.45); word-break: break-all; }
+.pi-noperm { padding: 8px 20px; color: rgba(0,0,0,.54); }
+.pi-meta { margin: 16px 20px 0; padding-top: 12px; border-top: 1px solid rgba(0,0,0,.1); font-size: 12px; color: rgba(0,0,0,.5); line-height: 1.6; word-break: break-word; }
+.pi-buttons { display: flex; justify-content: flex-end; gap: 8px; padding: 8px; border-top: 1px solid rgba(0,0,0,.1); flex: none; min-height: 52px; }
+.pi-status { font-size: 18px; display: flex; align-items: center; gap: 10px; }
+.pi-status .mdi { color: var(--accent); }
+.pi-progress { width: 80%; height: 4px; background: color-mix(in srgb, var(--accent) 25%, transparent); overflow: hidden; position: relative; }
+.pi-progress > div { position: absolute; top: 0; bottom: 0; width: 40%; background: var(--accent); animation: pi-indet 1.2s cubic-bezier(.4,0,.2,1) infinite; }
+@keyframes pi-indet { from { left: -40%; } to { left: 100%; } }
+body.drop-target #screen { outline: 4px dashed #80cbc4; outline-offset: 4px; }
+.drop-target.uninstall.hover { background: rgba(244, 67, 54, .75); }
