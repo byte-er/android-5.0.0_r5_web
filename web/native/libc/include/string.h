@@ -12,4 +12,5 @@ char *strchr(const char *s, int c);
 char *strstr(const char *s, const char *sub);
 char *strcpy(char *d, const char *s);
 char *strcat(char *d, const char *s);
+char *strncpy(char *d, const char *s, size_t n);
 #endif

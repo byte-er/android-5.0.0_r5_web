@@ -2,7 +2,7 @@
 const KEY = 'android5web.settings';
 const DEFAULTS = {
   wallpaper: 'wallpaper/lollipop.jpg',
-  brightness: 0.85,
+  brightness: 1,
   time_24: false,
   screen_off_timeout: 120000,
   font_scale: 1,

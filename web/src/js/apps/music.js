@@ -5,9 +5,11 @@ import { asset, listAssets } from '../core/assets.js';
 import { prefs } from '../core/prefs.js';
 import { nm } from '../core/notifications.js';
 import { toolbar, listItem, slider, tabs, toast } from '../core/ui.js';
+import { renderMidi, midiAvailable } from '../core/midi.js';
+import { fetchBytes } from '../core/assets.js';
 
-const ALBUMS = { ringtones: 'Material Ringtones', notifications: 'Material Notifications', alarms: 'Material Alarms' };
-const ART = { ringtones: ['#e91e63', '#9c27b0'], notifications: ['#00bcd4', '#3f51b5'], alarms: ['#ff9800', '#f44336'], local: ['#607d8b', '#263238'] };
+const ALBUMS = { ringtones: 'Material Ringtones', notifications: 'Material Notifications', alarms: 'Material Alarms', midi: 'MIDI (Sonivox EAS)' };
+const ART = { midi: ['#8bc34a', '#00796b'], ringtones: ['#e91e63', '#9c27b0'], notifications: ['#00bcd4', '#3f51b5'], alarms: ['#ff9800', '#f44336'], local: ['#607d8b', '#263238'] };
 
 class Music extends App {
   onCreate(root) {
@@ -15,13 +17,14 @@ class Music extends App {
       const [, kind, f] = k.split('/');
       return { title: f.replace('.ogg', ''), album: ALBUMS[kind], kind, artist: 'Android Open Source Project', src: asset(k) };
     });
+    if (midiAvailable()) this.tracks.unshift(...listAssets('midi/').map(k => ({ title: k.split('/').pop().replace(/\.[^.]+$/, ''), album: ALBUMS.midi, kind: 'midi', artist: 'Sonivox EAS synthesizer (WebAssembly)', midiKey: k })));
     this.audio = new Audio();
     this.audio.preload = 'metadata';
     this.idx = -1;
     this.list = h('div.page-content.track-list');
     this.mini = h('div.mini-player.rip', { onclick: () => this.full.classList.add('open') });
     this.full = this.fullPlayer();
-    const tb = tabs(['ALL', 'RINGTONES', 'NOTIFICATIONS', 'ALARMS'], i => { this.filter = [null, 'ringtones', 'notifications', 'alarms'][i]; this.renderList(); });
+    const tb = tabs(['ALL', 'MIDI', 'RINGTONES', 'NOTIF.', 'ALARMS'], i => { this.filter = [null, 'midi', 'ringtones', 'notifications', 'alarms'][i]; this.renderList(); });
     root.append(h('div.music', null, h('div.music-head', toolbar({ title: 'Music', menu: [{ label: 'Open audio files…', onClick: () => this.openFiles() }, { label: 'Shuffle all', onClick: () => { this.shuffle = true; this.play(Math.floor(Math.random() * this.tracks.length)); } }] }), tb), this.list, this.mini, this.full));
     tb.select(0, true);
     this.audio.addEventListener('timeupdate', () => this.updateProgress());
@@ -59,10 +62,19 @@ class Music extends App {
         h('button.tb-btn.rip.rip-u', { onclick: () => this.next() }, icon('next')),
         h('button.tb-btn.rip.rip-u', { onclick: e => { this.repeat = !this.repeat; e.currentTarget.classList.toggle('on', this.repeat); } }, icon('repeat'))));
   }
-  play(i) {
+  async play(i) {
     if (!this.tracks[i]) return;
     this.idx = i;
     const t = this.tracks[i];
+    if (!t.src && (t.midiKey || t.midiFile)) {
+      toast('Synthesizing with Sonivox EAS…');
+      try {
+        const r = await renderMidi(t.midiFile ? await t.midiFile.arrayBuffer() : await fetchBytes(t.midiKey));
+        t.src = URL.createObjectURL(r.blob);
+        toast(`Rendered ${r.seconds.toFixed(1)} s of MIDI in ${Math.round(r.ms)} ms (WebAssembly)`);
+      } catch (e) { toast('Can\u2019t play this file: ' + e.message); return; }
+      if (this.idx !== i) return;
+    }
     this.audio.src = t.src;
     this.audio.play().catch(() => toast('Can’t play this file'));
     this.renderList();
@@ -101,7 +113,14 @@ class Music extends App {
   }
   openFiles() {
     const inp = h('input', { type: 'file', accept: 'audio/*', multiple: true });
-    inp.onchange = () => { for (const f of inp.files) this.tracks.unshift({ title: f.name.replace(/\.[^.]+$/, ''), album: 'Local files', artist: 'Unknown artist', kind: 'local', src: URL.createObjectURL(f) }); this.idx = -1; this.renderList(); this.play(0); };
+    inp.accept = 'audio/*,.mid,.midi,.xmf,.mxmf,.rtttl,.imy,.ota';
+    inp.onchange = () => {
+      for (const f of inp.files) {
+        const isMidi = /\.(mid|midi|xmf|mxmf|rtttl|rtx|imy|ota)$/i.test(f.name);
+        this.tracks.unshift({ title: f.name.replace(/\.[^.]+$/, ''), album: isMidi ? ALBUMS.midi : 'Local files', artist: isMidi ? 'Sonivox EAS synthesizer (WebAssembly)' : 'Unknown artist', kind: isMidi ? 'midi' : 'local', src: isMidi ? null : URL.createObjectURL(f), midiFile: isMidi ? f : null });
+      }
+      this.idx = -1; this.renderList(); this.play(0);
+    };
     inp.click();
   }
 }

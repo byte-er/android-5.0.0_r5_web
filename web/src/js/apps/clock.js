@@ -142,6 +142,7 @@ class DeskClock extends App {
     this.colorTimer = setInterval(() => this.applyColor(), 60000);
     this.show(intent.tab ?? 1);
   }
+  onNewIntent(intent) { if (intent.tab != null) this.show(intent.tab); }
   applyColor() { const c = hourColor(); this.el.style.background = c; this.setStatusBarColor(c); }
   onDestroy() { clearInterval(this.colorTimer); clearInterval(this.clockTimer); cancelAnimationFrame(this.swRaf); clearInterval(this.timerTick); }
   show(i) {

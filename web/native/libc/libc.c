@@ -121,6 +121,7 @@ char *strstr(const char *s, const char *sub) {
 }
 char *strcpy(char *d, const char *s) { char *r = d; while ((*d++ = *s++)); return r; }
 char *strcat(char *d, const char *s) { strcpy(d + strlen(d), s); return d; }
+char *strncpy(char *d, const char *s, size_t n) { size_t i = 0; for (; i < n && s[i]; i++) d[i] = s[i]; for (; i < n; i++) d[i] = 0; return d; }
 
 /* ---------------------------------------------------------- printf */
 static void out_c(char **d, size_t *left, int *count, char c) {

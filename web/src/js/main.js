@@ -31,6 +31,7 @@ function buildDevice() {
     h('p', `Built from AOSP ${BUILD_PROPS['ro.source.tag']} (${BUILD_PROPS['ro.build.id']}), running in your browser.`),
     h('table', null, ...[['Esc', 'Back'], ['Alt+H / Home', 'Home'], ['Alt+R / End', 'Overview (recents)'], ['Alt+N', 'Notifications'], ['Alt+P', 'Power (hold: menu)'], ['PgUp / PgDn', 'Volume']]
       .map(([k, v]) => h('tr', h('td', h('kbd', k)), h('td', v)))),
+    h('p.small', 'Native AOSP code runs as WebAssembly: the SVOX Pico text-to-speech engine (Settings > Language & input > Text-to-speech) and the Sonivox EAS MIDI synthesizer (Music > MIDI).'),
     h('p.small', 'Tip: swipe down from the status bar, long-press the home screen, and tap "Android version" in Settings > About phone a few times.'));
   document.getElementById('stage').append(device, help);
   return { screen, device };

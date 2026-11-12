@@ -112,6 +112,11 @@ for (const kind of ['ringtones', 'notifications', 'alarms']) {
   }
 }
 
+// MIDI / XMF files played by the Sonivox EAS synth
+add('midi/Ants.mid', 'external/sonivox/arm-wt-22k/vectors/ants.mid');
+add('midi/BWV 115 (Replica Island).mid', 'external/replicaisland/res/raw/bwv_115.mid');
+add('midi/Leadsol.mxmf', 'external/sonivox/arm-wt-22k/vectors/Leadsol.mxmf', false);
+
 // SVOX Pico voices (external/svox/pico/lang)
 const VOICES = { 'en-US': 'lh0', 'en-GB': 'kh0', 'de-DE': 'gl0', 'es-ES': 'zl0', 'fr-FR': 'nk0', 'it-IT': 'cm0' };
 for (const [lang, spk] of Object.entries(VOICES)) {
@@ -121,14 +126,16 @@ for (const [lang, spk] of Object.entries(VOICES)) {
 
 // ------------------------------------------------------------------ native (wasm)
 const WASM = path.join(BUILD, 'native', 'svoxpico.wasm');
-const nativeSrcs = [path.join(WEB, 'native/pico_web.c'), path.join(WEB, 'native/libc/libc.c'), path.join(WEB, 'native/build.sh')];
-const stale = !exists(WASM) || nativeSrcs.some(s => fs.statSync(s).mtimeMs > fs.statSync(WASM).mtimeMs);
+const nativeSrcs = ['pico_web.c', 'eas_web.c', 'eas_hostweb.c', 'libc/libc.c', 'build.sh'].map(f => path.join(WEB, 'native', f));
+const stale = !exists(WASM) || !exists(path.join(BUILD, 'native', 'sonivox.wasm')) || nativeSrcs.some(s => fs.statSync(s).mtimeMs > fs.statSync(WASM).mtimeMs);
 if (stale || process.argv.includes('--native')) {
   log('compiling external/svox/pico -> WebAssembly');
   try { execFileSync('sh', [path.join(WEB, 'native/build.sh')], { stdio: 'inherit' }); }
   catch (e) { log('WARNING: native build failed; TTS will be unavailable'); }
 }
 if (exists(WASM)) assets['tts/svoxpico.wasm'] = { src: WASM, lite: true };
+const EAS_WASM = path.join(BUILD, 'native', 'sonivox.wasm');
+if (exists(EAS_WASM)) assets['media/sonivox.wasm'] = { src: EAS_WASM, lite: true };
 
 // ------------------------------------------------------------------ wallpaper downscale
 const processed = path.join(BUILD, 'processed');
@@ -251,7 +258,7 @@ const cssRaw = cssFiles.map(f => fs.readFileSync(path.join(WEB, 'src/css', f), '
 const css = (await esbuild.transform(cssRaw, { loader: 'css', minify: true })).code;
 
 // ------------------------------------------------------------------ outputs
-const mime = f => ({ '.png': 'image/png', '.jpg': 'image/jpeg', '.ogg': 'audio/ogg', '.ttf': 'font/ttf', '.wasm': 'application/wasm', '.bin': 'application/octet-stream', '.svg': 'image/svg+xml' })[path.extname(f)] || 'application/octet-stream';
+const mime = f => ({ '.png': 'image/png', '.jpg': 'image/jpeg', '.ogg': 'audio/ogg', '.ttf': 'font/ttf', '.wasm': 'application/wasm', '.bin': 'application/octet-stream', '.svg': 'image/svg+xml', '.mid': 'audio/midi', '.mxmf': 'audio/mobile-xmf' })[path.extname(f)] || 'application/octet-stream';
 
 function fontFaces(urlOf) {
   const faces = [
@@ -280,7 +287,7 @@ for (const [k, a] of Object.entries(assets)) {
   const dst = path.join(OUT_DIR, 'assets', k);
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.copyFileSync(a.src, dst);
-  assetMap[k] = 'assets/' + k;
+  assetMap[k] = 'assets/' + k.split('/').map(encodeURIComponent).join('/');
 }
 fs.writeFileSync(path.join(OUT_DIR, 'app.js'), js);
 fs.writeFileSync(path.join(OUT_DIR, 'app.css'), css);

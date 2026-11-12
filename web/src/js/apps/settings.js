@@ -389,7 +389,8 @@ class Settings extends App {
       listItem({ title: S('kernel_version', 'Kernel version'), summary: navigator.userAgent }),
       build,
       listItem({ title: 'Source', summary: `${p['ro.source.tag']} (git ${p['ro.web.git_revision']})` }),
-      listItem({ title: 'Runtime', summary: `JavaScript + ${wasm ? 'WebAssembly' : 'no WebAssembly'}, ${navigator.hardwareConcurrency || '?'} CPU threads` }));
+      listItem({ title: 'Runtime', summary: `JavaScript + ${wasm ? 'WebAssembly' : 'no WebAssembly'}, ${navigator.hardwareConcurrency || '?'} CPU threads` }),
+      listItem({ title: 'Native libraries (WebAssembly)', summary: 'libsvoxpico (Pico TTS), libsonivox (EAS MIDI synth)' }));
   }
   p_status() {
     const up = () => { const s = Math.floor((Date.now() - bootTime) / 1000); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
@@ -406,7 +407,8 @@ class Settings extends App {
   p_legal() {
     return this.page('Legal information', h('div.legal', 'Android 5.0 for the web is built from the Android Open Source Project (android-5.0.0_r5).\n\n' +
       'Copyright (C) 2005-2014 The Android Open Source Project. Licensed under the Apache License, Version 2.0.\n\n' +
-      'Includes: Roboto and Droid fonts (Apache 2.0); SVOX Pico TTS (Apache 2.0); Material sound set; SystemUI VectorDrawables; Launcher3, Settings, Calculator, DeskClock and other application resources from AOSP.'));
+      'Native code compiled to WebAssembly: SVOX Pico TTS (external/svox/pico) and the Sonivox EAS MIDI synthesizer (external/sonivox).\n\n' +
+      'Includes: Roboto and Droid fonts (Apache 2.0); Material sound set; SystemUI VectorDrawables; Launcher3, Settings, Calculator, DeskClock and other application resources from AOSP.'));
   }
 }
 
