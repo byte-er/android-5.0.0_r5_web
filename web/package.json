@@ -1,0 +1,15 @@
+{
+  "name": "android-5.0-web",
+  "version": "5.0.0-r5.1",
+  "private": true,
+  "description": "Android 5.0 Lollipop (5.0.0_r5) ported to the web browser",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "build:native": "sh native/build.sh",
+    "serve": "node tools/serve.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}

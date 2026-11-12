@@ -1,0 +1,64 @@
+/* Launcher3 (Lollipop) */
+#launcher { position: absolute; inset: 0; color: #fff; }
+#launcher.covered { visibility: hidden; transition: visibility 0s 320ms; }
+.workspace { position: absolute; inset: var(--sb-h) 0 var(--nb-h); display: flex; flex-direction: column; transition: transform 300ms var(--ease), opacity 200ms; }
+.ws-top { height: 64px; flex: none; position: relative; padding: 8px 8px 0; }
+.qsb { height: 48px; border-radius: 2px; background: #fff; color: rgba(0,0,0,.54); display: flex; align-items: center; gap: 12px; padding: 0 12px; box-shadow: var(--shadow-1); cursor: text; transition: opacity 200ms; }
+.qsb span { flex: 1; font-size: 16px; color: rgba(0,0,0,.4); }
+.drop-bar { position: absolute; inset: 8px 8px 0; display: flex; opacity: 0; pointer-events: none; transition: opacity 200ms; }
+#launcher.dragging .drop-bar { opacity: 1; }
+#launcher.dragging .qsb { opacity: 0; }
+.drop-target { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 500; text-transform: uppercase; border-radius: 2px; transition: background 150ms, color 150ms; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.drop-target.hover.remove { background: rgba(244, 67, 54, .75); }
+.drop-target.hover.info { background: rgba(0, 150, 136, .75); }
+.ws-viewport { flex: 1; overflow: hidden; position: relative; touch-action: none; }
+.ws-pages { position: absolute; inset: 0; display: flex; }
+.ws-page { flex: 0 0 100%; height: 100%; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); padding: 4px 8px; }
+.page-indicator { height: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; flex: none; }
+.page-indicator .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.4); transition: all 200ms; }
+.page-indicator .dot.on { background: #fff; transform: scale(1.3); }
+.page-indicator.dark .dot { background: rgba(0,0,0,.2); }
+.page-indicator.dark .dot.on { background: rgba(0,0,0,.6); }
+.hotseat { height: 76px; display: flex; align-items: center; justify-content: space-around; padding: 0 8px; flex: none; }
+.app-icon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 4px 2px; border-radius: 4px; cursor: pointer; min-width: 0; touch-action: none; }
+.app-icon img { width: 56px; height: 56px; object-fit: contain; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+.hotseat .app-icon { width: 64px; height: 64px; }
+.app-icon.empty { visibility: hidden; }
+.allapps-btn img { width: 48px; height: 48px; }
+.app-label { font-size: 12px; color: #fff; text-align: center; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,.7), 0 0 1px rgba(0,0,0,.6); line-height: 1.2; }
+.ws-item { min-width: 0; min-height: 0; }
+.drag-ghost { position: absolute !important; z-index: 600; pointer-events: none; transform: scale(1.15); filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
+.drop-hint { border-radius: 8px; background: rgba(255,255,255,.18); border: 2px dashed rgba(255,255,255,.5); pointer-events: none; }
+.widget { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-shadow: 0 1px 4px rgba(0,0,0,.5); touch-action: none; }
+.clock-widget .cw-time { font-size: 72px; font-weight: 100; line-height: 1; display: inline; letter-spacing: -1px; }
+.clock-widget .cw-ampm { font-size: 18px; font-weight: 300; }
+.clock-widget .cw-date { font-size: 13px; letter-spacing: .5px; margin-top: 4px; font-weight: 400; color: rgba(255,255,255,.9); }
+.analog-widget canvas { width: 140px; height: 140px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+/* overview mode (long-press on workspace) */
+.overview-bar { position: absolute; left: 0; right: 0; bottom: var(--nb-h); height: 88px; display: flex; justify-content: center; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 250ms; }
+#launcher.overview .overview-bar { opacity: 1; pointer-events: auto; }
+#launcher.overview .workspace { transform: scale(.72) translateY(-12%); }
+#launcher.overview .ws-page { outline: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+#launcher.overview .ws-viewport { overflow: visible; }
+.ov-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 104px; font-size: 12px; font-weight: 500; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); border-radius: 4px; }
+/* all apps */
+.all-apps { position: absolute; inset: var(--sb-h) 0 var(--nb-h); display: none; padding: 8px; }
+.all-apps.showing { display: block; }
+.aa-panel { width: 100%; height: 100%; background: #fff; border-radius: 2px; box-shadow: var(--shadow-3); display: flex; flex-direction: column; overflow: hidden; }
+.aa-tabs { display: flex; height: 48px; flex: none; color: rgba(0,0,0,.5); font-size: 14px; font-weight: 500; }
+.aa-tabs span { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; border-bottom: 2px solid transparent; }
+.aa-tabs span.on { color: #009688; border-color: #009688; }
+.aa-pages { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; touch-action: pan-x; }
+.aa-pages::-webkit-scrollbar { display: none; }
+.aa-page { flex: 0 0 100%; scroll-snap-align: start; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); padding: 8px 4px; }
+.aa-page .app-label { color: rgba(0,0,0,.87); text-shadow: none; }
+.aa-page .app-icon img { filter: none; }
+/* wallpaper picker */
+.wallpaper-picker { position: absolute; inset: 0; z-index: 650; background: #000; display: flex; flex-direction: column; }
+.wp-preview { flex: 1; background-size: cover; background-position: center; }
+.wp-bar { position: absolute; top: var(--sb-h); left: 0; right: 0; height: 56px; display: flex; align-items: center; padding: 0 8px; background: rgba(0,0,0,.4); }
+.wp-set { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 16px; font-weight: 500; text-transform: uppercase; padding: 8px 12px; border-radius: 2px; }
+.wp-strip { height: 140px; display: flex; gap: 8px; padding: 12px 8px; margin-bottom: var(--nb-h); overflow-x: auto; background: rgba(0,0,0,.85); flex: none; touch-action: pan-x; }
+.wp-thumb { flex: 0 0 76px; height: 116px; border-radius: 2px; background-size: cover; background-position: center; cursor: pointer; border: 3px solid transparent; }
+.wp-thumb.on { border-color: #80cbc4; }
+.wp-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #37474f; color: #fff; font-size: 11px; text-align: center; }

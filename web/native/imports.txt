@@ -1,0 +1,11 @@
+sin
+cos
+tan
+exp
+log
+log10
+pow
+atan
+atan2
+js_log
+js_now_ms
