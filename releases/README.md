@@ -23,6 +23,14 @@ so the app itself is a web file explorer written for this port (see
    - for the folder build, open `android-5.0-web/?install=../wapk/com.cxinventor.file.explorer-2.7.6.wapk`.
 3. Tap **Install**, then **Open**. The app also appears on the home screen.
 
+Two more packages replace APKs with original web apps. They have their own
+names and art, so nothing from the original apps is included:
+
+| Package | Replaces | What it does |
+| --- | --- | --- |
+| `wapk/org.android5web.swiftbrowser-1.0.wapk` | Opera Mini 20 | Lightweight tabbed browser: speed dial, private tabs, bookmarks, history, night mode |
+| `wapk/org.android5web.talkingpip-1.0.wapk` | Talking Tom Cat 2.7 | Talking pet "Pip": repeats what you say in a squeaky voice (microphone), says typed text with Pico TTS, and reacts to pokes, tickles and strokes |
+
 ## Controls
 
 On a desktop the phone is drawn in a device frame and can be driven with the

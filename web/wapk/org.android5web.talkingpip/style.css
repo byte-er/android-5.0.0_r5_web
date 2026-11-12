@@ -1,0 +1,16 @@
+[data-app="org.android5web.talkingpip"] .pip { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; color: #fff; overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #fff8e1 0%, #ffe082 45%, #ffb300 100%); }
+[data-app="org.android5web.talkingpip"] .pip-top { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 28px 8px 0 16px; color: #5e35b1; }
+[data-app="org.android5web.talkingpip"] .pip-title { font-size: 20px; font-weight: 500; }
+[data-app="org.android5web.talkingpip"] .pip-status { min-height: 44px; margin: 4px 16px 0; padding: 10px 18px; border-radius: 22px; background: rgba(255,255,255,.85); color: #4527a0; font-size: 16px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.12); max-width: 90%; }
+[data-app="org.android5web.talkingpip"] .pip-stage { position: relative; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+[data-app="org.android5web.talkingpip"] .pip-svg { height: 100%; max-height: 360px; max-width: 92%; cursor: pointer; touch-action: none; }
+[data-app="org.android5web.talkingpip"] .pip-svg * { transform-box: view-box; }
+[data-app="org.android5web.talkingpip"] .pip-snack { position: absolute; left: 50%; top: 52%; width: 34px; height: 34px; margin: -17px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffcc80, #a1887f); box-shadow: inset -4px -4px 0 rgba(0,0,0,.15); }
+[data-app="org.android5web.talkingpip"] .pip-actions { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 8px 4px; }
+[data-app="org.android5web.talkingpip"] .pip-act { width: 60px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 12px; background: rgba(255,255,255,.7); color: #5e35b1; font-size: 11px; font-weight: 500; }
+[data-app="org.android5web.talkingpip"] .pip-mic { width: 72px; height: 72px; border-radius: 50%; background: #7e57c2; color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-2); }
+[data-app="org.android5web.talkingpip"] .pip-mic .mdi svg { width: 32px; height: 32px; }
+[data-app="org.android5web.talkingpip"] .pip-mic.on { background: #e53935; animation: pip-pulse 1.4s ease-out infinite; }
+@keyframes pip-pulse { 0% { box-shadow: 0 0 0 0 rgba(229,57,53,.5); } 100% { box-shadow: 0 0 0 22px rgba(229,57,53,0); } }
+[data-app="org.android5web.talkingpip"] .pip-hint { font-size: 12px; color: rgba(69,39,160,.7); padding: 4px 16px 10px; text-align: center; }

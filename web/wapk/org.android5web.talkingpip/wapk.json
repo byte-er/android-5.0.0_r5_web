@@ -1,0 +1,10 @@
+{
+  "package": "org.android5web.talkingpip",
+  "label": "Talking Pip",
+  "versionName": "1.0",
+  "versionCode": 1,
+  "icon": "icon.svg",
+  "fullscreen": true,
+  "theme": { "colorPrimary": "#7e57c2", "colorPrimaryDark": "#5e35b1", "colorAccent": "#ffca28" },
+  "permissions": ["android.permission.RECORD_AUDIO", "android.permission.VIBRATE"]
+}

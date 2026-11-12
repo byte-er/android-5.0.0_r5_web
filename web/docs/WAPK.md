@@ -78,7 +78,9 @@ The window element carries `data-app="<package>"`; scope CSS with it.
 | `prefs.get(k, def)`, `prefs.set(k, v)` | Per-package SharedPreferences (removed on uninstall) |
 | `notify(n)`, `cancelNotification(id)` | NotificationManager |
 | `startActivity(pkg, intent)` | Launch another app |
-| `sound.click/playEffect/vibrate`, `is24HourFormat()` | Platform feedback |
+| `sound.click/playEffect/vibrate`, `sound.audioContext()`, `sound.mediaVolume()`, `is24HourFormat()` | Platform feedback and the shared Web Audio context |
+| `tts.available()`, `tts.speak(text, { rate, pitch, lang })`, `tts.stop()` | Text-to-speech via the Pico engine (WebAssembly) |
+| `media.getUserMedia(constraints)` | **Requires** `RECORD_AUDIO` for audio and `CAMERA` for video |
 | `zip.readZip(bytes)`, `zip.writeZip(entries)` | ZIP support |
 | `storage` | **Requires** `READ_EXTERNAL_STORAGE` or `WRITE_EXTERNAL_STORAGE`. Volumes: `internal()` = `/sdcard` (Origin Private File System, with an IndexedDB fallback), `system()` = read-only `/system` built from AOSP, `pickFolder()` = a local folder via the File System Access API. Each volume has `list / stat / readFile / writeFile / mkdir / remove`. Helpers: `copy, walk, usage, join, dirname, basename, ext, mimeOf, kindOf` |
 | `installPackage(bytes, name)` | **Requires** `REQUEST_INSTALL_PACKAGES`. Opens the system PackageInstaller |
@@ -102,7 +104,7 @@ browser**, so the app's behaviour comes from a web implementation in the
 `--impl` directory:
 - `main.js`, plus optional `style.css` and `res/`;
 - an optional `wapk.json` that overrides `theme`, `label`, `fullscreen`,
-  `permissions` and `minSdkVersion`.
+  `permissions` and `minSdkVersion`. To ship an original identity rather than the APK's branding, it can also override `package`, `versionName`, `versionCode` and `icon` (a file in the directory); the APK is then recorded under `replaces` in `META-INF/SOURCE.json`.
 
 Without `--impl`, a stub app is generated that says so.
 

@@ -1,0 +1,38 @@
+[data-app="org.android5web.swiftbrowser"] .sb { position: absolute; inset: 0; display: flex; flex-direction: column; background: #fafafa; color: rgba(0,0,0,.87); }
+[data-app="org.android5web.swiftbrowser"] .sb-top { height: 52px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 10px; background: var(--primary); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.25); z-index: 2; }
+[data-app="org.android5web.swiftbrowser"] .sb.private .sb-top, [data-app="org.android5web.swiftbrowser"] .sb.private .sb-bottom { background: #37474f; }
+[data-app="org.android5web.swiftbrowser"] .sb-lock .mdi svg { width: 18px; height: 18px; opacity: .8; }
+[data-app="org.android5web.swiftbrowser"] .sb-url { flex: 1; min-width: 0; height: 36px; border: 0; border-radius: 18px; padding: 0 14px; background: rgba(255,255,255,.16); color: #fff; font-size: 15px; outline: none; }
+[data-app="org.android5web.swiftbrowser"] .sb-url::placeholder { color: rgba(255,255,255,.65); }
+[data-app="org.android5web.swiftbrowser"] .sb-url:focus { background: #fff; color: rgba(0,0,0,.87); }
+[data-app="org.android5web.swiftbrowser"] .sb-progress { height: 3px; position: relative; z-index: 3; }
+[data-app="org.android5web.swiftbrowser"] .sb-progress.loading::after, [data-app="org.android5web.swiftbrowser"] .sb-progress.done::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+[data-app="org.android5web.swiftbrowser"] .sb-progress.loading::after { animation: sb-load 8s cubic-bezier(.1,.7,.3,1) forwards; }
+[data-app="org.android5web.swiftbrowser"] .sb-progress.done::after { width: 100%; opacity: 0; transition: opacity 300ms; }
+@keyframes sb-load { from { width: 0; } to { width: 90%; } }
+[data-app="org.android5web.swiftbrowser"] .sb-frames { flex: 1; position: relative; overflow: hidden; }
+[data-app="org.android5web.swiftbrowser"] .sb-tab { position: absolute; inset: 0; display: flex; }
+[data-app="org.android5web.swiftbrowser"] .sb-frame { flex: 1; border: 0; background: #fff; }
+[data-app="org.android5web.swiftbrowser"] .sb.night .sb-frame, [data-app="org.android5web.swiftbrowser"] .sb.night .sb-home { filter: invert(.9) hue-rotate(180deg); }
+[data-app="org.android5web.swiftbrowser"] .sb-bottom { height: 48px; flex: none; display: flex; justify-content: space-around; align-items: center; background: var(--primary); color: #fff; }
+[data-app="org.android5web.swiftbrowser"] .sb-bottom .tb-btn:disabled { opacity: .35; }
+[data-app="org.android5web.swiftbrowser"] .sb-count { width: 22px; height: 22px; border: 2px solid currentColor; border-radius: 4px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+[data-app="org.android5web.swiftbrowser"] .sb-home { flex: 1; overflow-y: auto; padding: 20px 12px; touch-action: pan-y; background: #fafafa; }
+[data-app="org.android5web.swiftbrowser"] .sb-dialgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+[data-app="org.android5web.swiftbrowser"] .sb-dial { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px; border-radius: 4px; background: #fff; box-shadow: var(--shadow-1); cursor: pointer; }
+[data-app="org.android5web.swiftbrowser"] .sb-dialicon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; font-weight: 500; background: #b0bec5; }
+[data-app="org.android5web.swiftbrowser"] .sb-dialname { font-size: 12px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-app="org.android5web.swiftbrowser"] .sb-privnote { display: flex; align-items: center; gap: 10px; padding: 12px; margin-bottom: 16px; background: #37474f; color: #fff; border-radius: 4px; font-size: 13px; }
+[data-app="org.android5web.swiftbrowser"] .sb-note { font-size: 12px; color: rgba(0,0,0,.45); margin-top: 20px; line-height: 1.5; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabgrid { position: absolute; inset: 0; z-index: 5; background: #263238; display: flex; flex-direction: column; color: #fff; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabbar { display: flex; align-items: center; gap: 4px; padding: 8px 8px 8px 16px; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabbar > div { flex: 1; font-size: 16px; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabbar .btn { color: #80d8ff; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabcards { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 12px; align-content: start; touch-action: pan-y; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabcard { background: #fff; color: rgba(0,0,0,.87); border-radius: 4px; overflow: hidden; cursor: pointer; box-shadow: var(--shadow-2); }
+[data-app="org.android5web.swiftbrowser"] .sb-tabcard.current { outline: 3px solid var(--accent); }
+[data-app="org.android5web.swiftbrowser"] .sb-tabcard.priv .sb-tabhead { background: #37474f; color: #fff; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabhead { display: flex; align-items: center; padding-left: 10px; font-size: 13px; height: 40px; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabhead span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabhead .tb-btn { width: 40px; height: 40px; }
+[data-app="org.android5web.swiftbrowser"] .sb-tabthumb { height: 120px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 500; }

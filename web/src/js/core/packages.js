@@ -5,8 +5,9 @@ import { App, registerApp, unregisterApp, sys, appManifest } from './system.js';
 import { h, icon, vector, letterTile, fmtTime, fmtDate, drag, onLongPress, clamp } from './dom.js';
 import * as ui from './ui.js';
 import { nm } from './notifications.js';
-import { click, playEffect, vibrate } from './sound.js';
+import { click, playEffect, vibrate, audioCtx, streamVolume } from './sound.js';
 import * as storage from './storage.js';
+import { speak, stopSpeaking, ttsAvailable } from './tts.js';
 import { prefs } from './prefs.js';
 import { BUILD_PROPS } from '@gen';
 
@@ -152,7 +153,7 @@ function createRuntime(rec, url) {
     ui: { toolbar: ui.toolbar, listItem: ui.listItem, switchItem: ui.switchItem, switchEl: ui.switchEl, checkbox: ui.checkbox, subheader: ui.subheader,
       divider: ui.divider, slider: ui.slider, button: ui.button, fab: ui.fab, dialog: ui.dialog, prompt: ui.prompt, toast: ui.toast,
       popupMenu: ui.popupMenu, PageStack: ui.PageStack, tabs: ui.tabs, emptyState: ui.emptyState },
-    sound: { click, playEffect, vibrate },
+    sound: { click, playEffect, vibrate, audioContext: audioCtx, mediaVolume: () => streamVolume('media') },
     zip: { readZip, writeZip },
     is24HourFormat: () => !!prefs.get('time_24'),
     resource: name => url(name),
@@ -169,6 +170,16 @@ function createRuntime(rec, url) {
       return { internal: storage.internalStorage, system: storage.systemStorage, canPickFolders: storage.canPickFolders, pickFolder: storage.pickFolder,
         usage: storage.usage, copy: storage.copyEntry, walk: storage.walk, join: storage.join, dirname: storage.dirname, basename: storage.basename,
         ext: storage.ext, mimeOf: storage.mimeOf, kindOf: storage.kindOf, readOnly: !perms.has('android.permission.WRITE_EXTERNAL_STORAGE') };
+    },
+    // TextToSpeech (SVOX Pico in WebAssembly)
+    tts: { available: ttsAvailable, speak: (text, opts) => speak(text, opts), stop: stopSpeaking },
+    // Camera / microphone through getUserMedia, gated by CAMERA / RECORD_AUDIO
+    media: {
+      getUserMedia(constraints = {}) {
+        if (constraints.audio) require(perms.has('android.permission.RECORD_AUDIO'), 'the microphone');
+        if (constraints.video) require(perms.has('android.permission.CAMERA'), 'the camera');
+        return navigator.mediaDevices.getUserMedia(constraints);
+      },
     },
     // ACTION_INSTALL_PACKAGE: hands bytes to the system PackageInstaller
     installPackage(bytes, name) {

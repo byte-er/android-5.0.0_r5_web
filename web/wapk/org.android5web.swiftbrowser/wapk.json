@@ -1,0 +1,9 @@
+{
+  "package": "org.android5web.swiftbrowser",
+  "label": "Swift Browser",
+  "versionName": "1.0",
+  "versionCode": 1,
+  "icon": "icon.svg",
+  "theme": { "colorPrimary": "#283593", "colorPrimaryDark": "#1a237e", "colorAccent": "#00b0ff" },
+  "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"]
+}

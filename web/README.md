@@ -72,6 +72,11 @@ package. It provides:
 - a library view by file type, copy/move/rename/delete, zip and unzip;
 - image, media and text viewers, and installing `.wapk` files from storage.
 
+Original replacements with their own names and art:
+- `wapk/org.android5web.swiftbrowser` replaces Opera Mini;
+- `wapk/org.android5web.talkingpip` replaces Talking Tom Cat. It uses the
+  microphone through the gated `media` API and Pico TTS through the `tts` API.
+
 ### Web platform features used
 ES modules bundled with esbuild (plus dynamic `import()` of WAPK entry modules), WebAssembly, Origin Private File System, File System Access API, Compression Streams (ZIP), SubtleCrypto (package checksums), Web Audio, Web Animations,
 CSS custom properties, `clip-path` reveals, `color-mix()`, Pointer Events,

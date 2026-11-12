@@ -13,7 +13,10 @@
 // from a web implementation in --impl <dir>:
 //   main.js     ES module: export default android => class extends android.App { ... }
 //   style.css   optional, injected while the package is installed
-//   wapk.json   optional overrides: { theme, label, fullscreen, permissions, minSdkVersion }
+//   wapk.json   optional overrides: { package, label, versionName, versionCode, icon, theme,
+//               fullscreen, permissions, minSdkVersion }. Use package/label/icon to ship
+//               an original identity instead of the APK's branding; the APK is then
+//               recorded as `replaces` in META-INF/SOURCE.json.
 //   res/**      optional resources, available through android.resource(path)
 // Without --impl a stub app is generated that explains this and shows the APK info.
 import fs from 'node:fs';
@@ -41,7 +44,7 @@ if (implDir) {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
       const r = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(path.join(dir, e.name), r);
-      else if (r !== 'wapk.json' && !r.endsWith('.md')) add(r, fs.readFileSync(path.join(dir, e.name)));
+      else if (r !== 'wapk.json' && !r.endsWith('.md') && r !== overrides.icon) add(r, fs.readFileSync(path.join(dir, e.name)));
     }
   };
   walk(implDir);
@@ -62,7 +65,9 @@ export default android => class extends android.App {
 `);
 }
 
-if (apk.icon) add('icon.png', apk.icon);
+let iconName = 'icon.png';
+if (overrides.icon) { iconName = 'icon' + path.extname(overrides.icon); add(iconName, fs.readFileSync(path.join(implDir, overrides.icon))); }
+else if (apk.icon) add('icon.png', apk.icon);
 else add('icon.png', fs.readFileSync(new URL('../../packages/apps/Launcher3/res/mipmap-xxhdpi/ic_launcher_application.png', import.meta.url)));
 
 const source = {
@@ -71,22 +76,23 @@ const source = {
   apk: { file: path.basename(apkPath), sha256: apk.sha256, versionCode: apk.versionCode, launchableActivity: apk.launchableActivity,
     iconPath: apk.iconPath, dexFiles: apk.dexFiles, nativeAbis: apk.nativeAbis, permissions: apk.permissions },
   implementation: implDir ? 'web' : 'stub',
+  ...(overrides.package && overrides.package !== apk.package ? { replaces: { package: apk.package, label: apk.label, versionName: apk.versionName } } : {}),
 };
 add('META-INF/SOURCE.json', JSON.stringify(source, null, 2));
 
 const manifest = {
   wapk: 1,
-  package: apk.package,
+  package: overrides.package || apk.package,
   label: overrides.label || apk.label,
-  versionCode: apk.versionCode,
-  versionName: apk.versionName,
+  versionCode: overrides.versionCode || apk.versionCode,
+  versionName: overrides.versionName || apk.versionName,
   minSdkVersion: overrides.minSdkVersion || apk.minSdkVersion,
   targetSdkVersion: apk.targetSdkVersion,
   minRuntime: 1,
   // Only permissions that mean something in the browser runtime are requested;
   // the full APK list is kept in META-INF/SOURCE.json.
   permissions: overrides.permissions || apk.permissions,
-  icon: 'icon.png',
+  icon: iconName,
   entry: 'main.js',
   styles: files.some(f => f.name === 'style.css') ? ['style.css'] : [],
   theme: overrides.theme || {},
@@ -95,7 +101,7 @@ const manifest = {
 };
 for (const f of files) manifest.files[f.name] = await sha256Hex(f.data);
 const out = await writeZip([{ name: 'WAPK-MANIFEST.json', data: JSON.stringify(manifest, null, 2) }, ...files]);
-const outPath = outArg || `${apk.package}-${apk.versionName}.wapk`;
+const outPath = outArg || `${manifest.package}-${manifest.versionName}.wapk`;
 fs.mkdirSync(path.dirname(path.resolve(outPath)), { recursive: true });
 fs.writeFileSync(outPath, out);
 console.log(`[apk2wapk] wrote ${outPath} (${out.length} bytes, ${files.length + 1} entries, implementation: ${source.implementation})`);
