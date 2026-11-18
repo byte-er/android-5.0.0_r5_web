@@ -1,0 +1,4 @@
+# Upstream files larger than GitHub's 100 MB limit; not needed for device builds.
+prebuilts/sdk/tools/windows/libclang.dll
+prebuilts/sdk/tools/windows/libLLVM.dll
+prebuilts/qemu-kernel/x86_64/vmlinux-qemu
