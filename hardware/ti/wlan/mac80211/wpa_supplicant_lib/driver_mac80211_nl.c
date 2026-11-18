@@ -97,3 +97,31 @@ int wpa_driver_nl80211_driver_cmd(void *priv, char *cmd, char *buf,
 	}
 	return ret;
 }
+
+/*
+ * Android 5.0's wpa_supplicant/hostapd (driver_nl80211.c, ANDROID_P2P)
+ * expect a private driver library to also provide these Wi-Fi Direct
+ * hooks.  The WL1271 driver has no such vendor extensions, so behave like
+ * AOSP's ANDROID_P2P_STUB versions.
+ */
+int wpa_driver_set_p2p_noa(void *priv, u8 count, int start, int duration)
+{
+	return 0;
+}
+
+int wpa_driver_get_p2p_noa(void *priv, u8 *buf, size_t len)
+{
+	return 0;
+}
+
+int wpa_driver_set_p2p_ps(void *priv, int legacy_ps, int opp_ps, int ctwindow)
+{
+	return -1;
+}
+
+int wpa_driver_set_ap_wps_p2p_ie(void *priv, const struct wpabuf *beacon,
+				 const struct wpabuf *proberesp,
+				 const struct wpabuf *assocresp)
+{
+	return 0;
+}
