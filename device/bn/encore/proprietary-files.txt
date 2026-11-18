@@ -1,0 +1,18 @@
+# Proprietary files for the Nook Color (encore), relative to /system.
+# Fetched by fetch-vendor-blobs.sh into vendor/bn/encore/proprietary.
+#
+# PowerVR SGX530 user-space driver (TI Graphics SDK / DDK 1.9).
+# bin/pvrsrvinit is NOT used: the prebuilt is non-PIE and will not run on
+# Android 5.0; device/bn/encore/pvrsrvinit replaces it.
+vendor/lib/egl/libEGL_POWERVR_SGX530_125.so
+vendor/lib/egl/libGLESv1_CM_POWERVR_SGX530_125.so
+vendor/lib/egl/libGLESv2_POWERVR_SGX530_125.so
+vendor/lib/hw/gralloc.omap3.so
+vendor/lib/libIMGegl.so
+vendor/lib/libPVRScopeServices.so
+vendor/lib/libglslcompiler.so
+vendor/lib/libpvr2d.so
+vendor/lib/libpvrANDROID_WSEGL.so
+vendor/lib/libsrv_init.so
+vendor/lib/libsrv_um.so
+vendor/lib/libusc.so

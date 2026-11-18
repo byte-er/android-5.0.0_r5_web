@@ -1,5 +1,6 @@
-com_svox_picottsengine.cpp
 .aosp-restore-cache/
 prebuilts/sdk/tools/windows/libclang.dll
 prebuilts/sdk/tools/windows/libLLVM.dll
 prebuilts/qemu-kernel/x86_64/vmlinux-qemu
+vendor/bn/
+out/

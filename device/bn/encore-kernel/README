@@ -1,0 +1,6 @@
+Prebuilt kernel for the Nook Color (encore), built by device/bn/encore/build-kernel.sh
+
+source:    kernel/bn/encore (3.0.101) encore_lollipop_defconfig
+wifi:      hardware/ti/wlan/mac80211/compat_wl12xx
+toolchain: arm-eabi-gcc (GCC) 4.8
+version:   Linux version 3.0.101-aosp-encore (root@vm) (gcc version 4.8 (GCC) ) #5 PREEMPT Wed Nov 18 18:18:18 UTC 2026

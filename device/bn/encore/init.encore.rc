@@ -1,0 +1,197 @@
+import /init.encore.usb.rc
+
+on early-init
+    # Cap the CPU at 1 GHz as early as possible.
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 1000000
+
+    mkdir /mnt/media_rw/sdcard0 0700 media_rw media_rw
+    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
+    mkdir /mnt/media_rw/usbdisk 0700 media_rw media_rw
+    mkdir /storage/sdcard0 0700 root root
+    mkdir /storage/sdcard1 0700 root root
+    mkdir /storage/usbdisk 0700 root root
+
+    # Primary storage is the internal FAT partition (eMMC p8), the microSD
+    # card is secondary.
+    export EXTERNAL_STORAGE /storage/sdcard0
+    export SECONDARY_STORAGE /storage/sdcard1:/storage/usbdisk
+
+    symlink /storage/sdcard0 /sdcard
+    symlink /storage/sdcard0 /mnt/sdcard
+    symlink /storage/sdcard0 /emmc
+    symlink /storage/sdcard1 /mnt/ext_sdcard
+    symlink /storage/usbdisk /usbdisk
+
+on init
+    # TI DSP bridge locations (used once DSP-accelerated codecs are enabled)
+    export DSP_PATH /system/lib/dsp
+    export DEFAULT_BASEIMAGE /system/lib/dsp/baseimage.dof
+
+    symlink /system/vendor /vendor
+
+    # B&N "rom" partition (serial number, MAC address, boot counter)
+    mkdir /rom 0770 system system
+
+    # zram swap: no page clustering, keep foreground apps resident.
+    write /proc/sys/vm/page-cluster 0
+    write /proc/sys/vm/swappiness 20
+
+    # 512 MB of RAM: keep a little more free for the GPU and kernel.
+    write /proc/sys/vm/min_free_kbytes 4096
+
+on fs
+    # Create /dev/block/by-name/{boot,system,userdata} for the boot medium
+    # (and point vold at the SD card's data partition when booted from SD).
+    mkdir /dev/block/by-name 0755 root root
+    start fsfinder
+    wait /dev/block/by-name/system
+
+    mount_all /fstab.encore
+    swapon_all /fstab.encore
+
+on post-fs-data
+    mkdir /data/media 0770 media_rw media_rw
+
+    # Wi-Fi
+    mkdir /data/misc/wifi 0770 wifi wifi
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp dhcp /data/misc/dhcp
+    insmod /system/lib/modules/compat.ko
+    insmod /system/lib/modules/cfg80211.ko
+    insmod /system/lib/modules/mac80211.ko
+    insmod /system/lib/modules/wl12xx.ko
+    # Put this device's MAC address into the WL1271 nvs file.
+    start store_mac_addr
+
+    setprop vold.post_fs_data_done 1
+
+on boot
+    # Bluetooth (TI-ST) power and UART
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
+    chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
+    chmod 0660 /sys/class/rfkill/rfkill0/state
+    chown bluetooth bluetooth /dev/ttyO1
+
+    # OMAP3 power management (OFF mode in idle, SmartReflex)
+    mount debugfs /sys/kernel/debug /sys/kernel/debug
+    write /sys/kernel/debug/pm_debug/sleep_while_idle 1
+    write /sys/kernel/debug/pm_debug/voltage_off_while_idle 1
+    write /sys/kernel/debug/pm_debug/enable_off_mode 1
+    write /sys/kernel/debug/smartreflex/sr_core/autocomp 1
+    write /sys/kernel/debug/smartreflex/sr_mpu_iva/autocomp 1
+
+    # cpufreq: interactive governor if the kernel has it, else ondemand
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ondemand
+    write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold 50
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/boost_factor
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/input_boost
+
+    # Power HAL: SGX core clock pinning
+    chown system system /sys/devices/platform/omap/pvrsrvkm.0/pin_core_clk
+
+    # Backlight (lights HAL)
+    chown system system /sys/class/leds/lcd-backlight/brightness
+    chown system system /sys/class/leds/lcd-backlight/max_brightness
+
+    # Display subsystem (omapdss)
+    chown system graphics /sys/devices/platform/omapdss/display0/enabled
+    chmod 0664 /sys/devices/platform/omapdss/display0/enabled
+    chown system graphics /sys/devices/platform/omapdss/display0/timings
+    chown system graphics /sys/devices/platform/omapdss/manager0/name
+    chown system graphics /sys/devices/platform/omapdss/manager0/display
+    chown system graphics /sys/devices/platform/omapdss/overlay0/manager
+    chown system graphics /sys/devices/platform/omapdss/overlay1/manager
+    chown system graphics /sys/devices/platform/omapdss/overlay2/manager
+    chown system graphics /sys/devices/platform/omapdss/overlay0/enabled
+    chown system graphics /sys/devices/platform/omapdss/overlay1/enabled
+    chown system graphics /sys/devices/platform/omapdss/overlay2/enabled
+    chown system graphics /sys/devices/platform/omapdss/overlay0/zorder
+    chown system graphics /sys/devices/platform/omapdss/overlay1/zorder
+    chown system graphics /sys/devices/platform/omapdss/overlay2/zorder
+
+    # eMMC/SD I/O tuning (no seek penalty on flash)
+    write /sys/block/mmcblk0/bdi/read_ahead_kb 1024
+    write /sys/block/mmcblk1/bdi/read_ahead_kb 1024
+    write /sys/block/mmcblk0/queue/iosched/back_seek_penalty 0
+    write /sys/block/mmcblk0/queue/iosched/back_seek_max 1048576
+    write /sys/block/mmcblk0/queue/iosched/quantum 1
+
+    # Let USB root hubs autosuspend immediately
+    write /sys/bus/usb/devices/usb1/power/autosuspend_delay_ms 0
+
+on property:sys.boot_completed=1
+    # The B&N/CM u-boot counts boots and forces recovery after 8 failures;
+    # reset the counter once Android is up.
+    start bootcnt
+
+    # Merge duplicate pages (helps a lot with 512 MB)
+    write /sys/kernel/mm/ksm/pages_to_scan 100
+    write /sys/kernel/mm/ksm/sleep_millisecs 500
+    write /sys/kernel/mm/ksm/run 1
+
+service fsfinder /sbin/fsfinder
+    class core
+    user root
+    disabled
+    oneshot
+
+# Start the PowerVR SGX user-space services (must run before surfaceflinger)
+service pvrsrvinit /system/bin/pvrsrvinit
+    class core
+    user root
+    group root
+    oneshot
+
+service bootcnt /system/bin/clear_bootcnt.sh
+    class core
+    user root
+    group root
+    disabled
+    oneshot
+
+service logbatterydata /system/bin/log_battery_data.sh
+    class main
+    user root
+    group root
+
+service store_mac_addr /system/bin/store-mac-addr
+    class core
+    user root
+    disabled
+    oneshot
+
+service wpa_supplicant /system/bin/wpa_supplicant \
+    -iwlan0 -Dnl80211 -c/data/misc/wifi/wpa_supplicant.conf \
+    -I/system/etc/wifi/wpa_supplicant_overlay.conf \
+    -O/data/misc/wifi/sockets \
+    -e/data/misc/wifi/entropy.bin -g@android:wpa_wlan0
+    class main
+    socket wpa_wlan0 dgram 660 wifi wifi
+    disabled
+    oneshot
+
+service dhcpcd_wlan0 /system/bin/dhcpcd -aABDKL
+    class main
+    disabled
+    oneshot
+
+service iprenew_wlan0 /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
+# FUSE daemons exporting the vold-mounted FAT volumes with Android permissions
+service fuse_sdcard0 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard0 /storage/sdcard0
+    class late_start
+    disabled
+
+service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
+    class late_start
+    disabled
+
+service fuse_usbdisk /system/bin/sdcard -u 1023 -g 1023 -w 1023 -d /mnt/media_rw/usbdisk /storage/usbdisk
+    class late_start
+    disabled

@@ -1,0 +1,113 @@
+#!/sbin/sh
+#
+# Installer for AOSP 5.0 on the Nook Color (encore).
+#
+# Runs inside CWM or TWRP recovery started by the CyanogenMod u-boot.
+# Recovery calls:  update-binary <api version> <status fd> <zip file>
+#
+# Writes:
+#   system.img          -> system partition of the medium recovery booted from
+#   uImage, uRamdisk    -> boot partition (FAT); the previous files are kept
+#                          as uImage.bak / uRamdisk.bak, and the very first
+#                          ones replaced are also kept as *.orig
+# Leaves /data alone: wipe data/cache in recovery when coming from another ROM.
+
+OUTFD=$2
+ZIP=$3
+PATH=/sbin:/system/bin:/system/xbin:$PATH
+
+ui_print() {
+    echo "ui_print $1" > /proc/self/fd/$OUTFD
+    echo "ui_print" > /proc/self/fd/$OUTFD
+}
+
+set_progress() {
+    echo "set_progress $1" > /proc/self/fd/$OUTFD
+}
+
+STAGE=check
+abort() {
+    ui_print "ERROR: $1"
+    case $STAGE in
+    check) ui_print "Nothing was changed." ;;
+    system) ui_print "The system partition is incomplete; the boot partition"
+            ui_print "was not changed.  Restore a backup or flash a ROM." ;;
+    boot) ui_print "System was written but the boot files were not;"
+          ui_print "uImage.bak/uRamdisk.bak hold the previous files." ;;
+    esac
+    umount /tmp/encore-boot 2>/dev/null
+    exit 1
+}
+
+ui_print "AOSP 5.0 for Nook Color (encore)"
+ui_print "$(unzip -p "$ZIP" build.txt 2>/dev/null)"
+
+# --- Which medium did u-boot boot from? -------------------------------------
+if grep -q "androidboot.bootdevice=SD" /proc/cmdline; then
+    MEDIUM=SD
+    BOOT=/dev/block/mmcblk1p1
+    SYSTEM=/dev/block/mmcblk1p2
+else
+    MEDIUM=eMMC
+    BOOT=/dev/block/mmcblk0p1
+    SYSTEM=/dev/block/mmcblk0p5
+fi
+ui_print "Installing to: $MEDIUM ($SYSTEM)"
+
+[ -b "$BOOT" ] || abort "boot partition $BOOT not found"
+[ -b "$SYSTEM" ] || abort "system partition $SYSTEM not found"
+
+# --- Make sure system.img fits ------------------------------------------------
+IMGSIZE=$(unzip -l "$ZIP" system.img | awk '$4 == "system.img" { print $1 }')
+PARTSIZE=$(( $(cat /sys/class/block/${SYSTEM##*/}/size) * 512 ))
+[ -n "$IMGSIZE" ] || abort "system.img missing from zip"
+[ "$IMGSIZE" -le "$PARTSIZE" ] || \
+    abort "system.img ($IMGSIZE bytes) is larger than $SYSTEM ($PARTSIZE bytes)"
+
+# --- Check the boot partition is the CM u-boot layout before touching system --
+mkdir -p /tmp/encore-boot
+umount /tmp/encore-boot 2>/dev/null
+mount -t vfat "$BOOT" /tmp/encore-boot || abort "cannot mount boot partition $BOOT"
+[ -f /tmp/encore-boot/u-boot.bin ] || \
+    abort "no u-boot.bin on $BOOT: this does not look like a CyanogenMod boot partition"
+FREE=$(df -k /tmp/encore-boot | awk 'NR==2 { print $4 }')
+NEED=$(( ( $(unzip -l "$ZIP" uImage | awk '$4=="uImage"{print $1}') + \
+           $(unzip -l "$ZIP" uRamdisk | awk '$4=="uRamdisk"{print $1}') ) / 1024 + 64 ))
+umount /tmp/encore-boot
+
+# --- System -----------------------------------------------------------------
+STAGE=system
+ui_print "Writing system image (this takes a few minutes)..."
+umount /system 2>/dev/null
+set_progress 0.1
+unzip -p "$ZIP" system.img | dd of="$SYSTEM" bs=1048576 2>/dev/null || abort "writing $SYSTEM failed"
+sync
+set_progress 0.8
+
+# --- Boot files -------------------------------------------------------------
+STAGE=boot
+ui_print "Installing kernel and ramdisk..."
+mount -t vfat "$BOOT" /tmp/encore-boot || abort "cannot mount boot partition $BOOT"
+cd /tmp/encore-boot
+for f in uImage uRamdisk; do
+    if [ -f "$f" ]; then
+        [ -f "$f.orig" ] || cp "$f" "$f.orig"
+        cp "$f" "$f.bak"
+    fi
+done
+# Old backups can be dropped if space is short; the new files must fit.
+FREE=$(df -k /tmp/encore-boot | awk 'NR==2 { print $4 }')
+if [ "$FREE" -lt "$NEED" ]; then
+    rm -f uImage.bak uRamdisk.bak
+fi
+unzip -o -q "$ZIP" uImage uRamdisk -d /tmp/encore-boot || abort "copying boot files failed"
+sync
+cd /
+umount /tmp/encore-boot
+set_progress 1.0
+
+ui_print " "
+ui_print "Done.  If you are coming from another ROM,"
+ui_print "wipe data/factory reset before rebooting."
+ui_print "The first boot takes several minutes."
+exit 0
